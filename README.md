@@ -63,8 +63,8 @@ The corresponding `input.csv` mapping should match the following format:
 login,file
 netid1@illinois.edu,cs100-sp20-netid1-feedback1.pdf
 netid1@illinois.edu,cs100-sp20-netid1-feedback2.docx
-netid2@illinois.edu,cs100-sp20-netid1-feedback1.pdf
-netid2@illinois.edu,cs100-sp20-netid1-feedback2.docx
+netid2@illinois.edu,cs100-sp20-netid2-feedback1.pdf
+netid2@illinois.edu,cs100-sp20-netid2-feedback2.docx
 ...
 ```
 
