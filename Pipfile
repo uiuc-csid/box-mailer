@@ -9,7 +9,7 @@ ipython = "*"
 
 [packages]
 boxsdk = "*"
-click = "*"
+click = "~=7.0"
 
 [requires]
 python_version = "3.7"

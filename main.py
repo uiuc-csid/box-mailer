@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import csv
 from smtplib import SMTP
 from email.message import EmailMessage
@@ -5,36 +7,23 @@ from email.message import EmailMessage
 from boxsdk import Client, OAuth2, DevelopmentClient, BoxAPIException
 import click
 
-class PooledSMTP():
-    def __init__(self, hostname, max_messages=95):
-        self.hostname = hostname
-        self.message_count = 0
-        self.max_messages = max_messages
-        self.connection = None
 
-    def __enter__(self):
-        self.connection = SMTP(self.hostname)
-        return self
-
-    def __exit__(self, *exc_details):
-        self.connection.quit()
-
-    def reconnect(self):
-        self.connection.quit()
-        self.connection.connect(self.hostname)
-
-    def send_message(self, *args, **kwargs):
-        if self.message_count > self.max_messages:
-            self.reconnect()
-        self.connection.send_message(*args, **kwargs)
-        self.message_count += 1
-
+def send_email(user, connection):
+    message = EmailMessage()
+    message['From'] = 'boxmailer@illinois.edu'
+    message['To'] = user['login']
+    message['Subject'] = 'Test files'
+    message.set_content(f"Your link to the test item is {user['link']}.")
+    connection.send_message(message)
 
 @click.command()
-@click.option('--dev-token', envvar='BOXMAILER_DEV_TOKEN')
-@click.option('--user-details-file', type=click.File(), default="input.csv")
-@click.argument('folder-name')
-def main(dev_token, user_details_file, folder_name):
+@click.option('--dev-token', help='Box development token. See README for details')
+@click.option('--user-details-file', type=click.File(), default="input.csv", help='Defaults to input.csv')
+@click.option('--dirs/--files', default=True, help='Share folders or files. Defaults to folders')
+@click.option('--send-email', type=click.BOOL, default=False, help='Send confirmation emails to students')
+@click.argument('base-folder')
+def main(dev_token, user_details_file, dirs, send_email, base_folder):
+    # Get API client
     if dev_token is None:
         client = DevelopmentClient()
     else:
@@ -45,30 +34,44 @@ def main(dev_token, user_details_file, folder_name):
         )
         client = Client(auth)
 
+    # Read in list of users
     reader = csv.DictReader(user_details_file)
     users_detail = list(reader)
 
-    folder = client.search().query(folder_name, limit=1, result_type='folder').next()
+    # Get reference to base folder
+    folder = client.search().query(base_folder, limit=1, result_type='folder').next()
     for user in users_detail:
-        item = client.search().query(user['file'], limit=1, ancestor_folders=[folder], result_type='file').next()
+        filetype = 'folder' if dirs else 'file'
+        # Get reference to user's file/folder
+        item = client.search().query(user['file'], limit=1, ancestor_folders=[folder], result_type=filetype).next()
         try:
+            # Share item with user
             item.collaborate_with_login(user['login'], role='viewer')
+            user['link'] = item.get_shared_link('collaborators')
         except BoxAPIException as ex:
+            # Error if already sharing
             if not ex.code == 'user_already_collaborator':
                 raise ex
-        user['link'] = item.get_shared_link('collaborators')
     
-    # Need collection pooling/limiting due to rate limits
-    with PooledSMTP('outbound-relays.techservices.illinois.edu') as sender:
+    if send_email:
+        # Send email to each new student
+        connection = SMTP('outbound-relays.techservices.illinois.edu')
+        messages = 0
+
         for user in users_detail:
-            message = EmailMessage()
-            message['From'] = 'asplund3@illinois.edu'
-            message['To'] = user['login']
-            message['Subject'] = 'Test files'
-            message.set_content(f"Your link to the test file is {user['link']}.")
-            sender.send_message(message)
+            # Don't send email if already sharing
+            if 'link' not in user:
+                continue
+
+            # Reconnect if we are nearing rate limiting
+            if messages >= 95:
+                connection.quit()
+                connection = SMTP('outbound-relays.techservices.illinois.edu')
+
+            send_email(user, connection)
+            messages += 1
 
     return
 
 if __name__ == '__main__':
-    main() # pylint: disable=no-value-for-parameter
+    main(auto_envvar_prefix='BOXMAILER') # pylint: disable=no-value-for-parameter
