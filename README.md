@@ -42,7 +42,7 @@ netid2@illinois.edu,cs100-sp20-netid2
 git clone https://gitlab.engr.illinois.edu/cs-instructional-dev/box-mailer.git box-mailer
 cd box-mailer
 pipenv install
-pipenv run main.py <name of base folder> # 'cs100-sp20' in the example above
+pipenv run python main.py <name of base folder> # 'cs100-sp20' in the example above
 ```
 
 The script uses [click](https://click.palletsprojects.com/en/7.x/) for parsing and helpdocs, and the [box-sdk](https://github.com/box/box-python-sdk) to connect to the API. These can be installed manually or through [pipenv](https://pipenv.pypa.io/en/latest/) which will automatically create a virtualenv for the script and install all the requirements. The virtualenv can be accessed with `pipenv run <command>` which runs a command within it, or with `pipenv shell`, which spawns a new shell with the virtualenv actived.
