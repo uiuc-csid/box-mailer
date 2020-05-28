@@ -1,19 +1,25 @@
 #!/usr/bin/env python3
 
 import csv
+from string import Template
 from smtplib import SMTP
 from email.message import EmailMessage
 
 from boxsdk import Client, OAuth2, DevelopmentClient, BoxAPIException
 import click
 
+email_template = Template("""Your link to the test item is ${link}.
+
+If you cant login to Box you must enable your account through the following link
+https://cloud-dashboard.illinois.edu""")
 
 def send_email(user, connection):
     message = EmailMessage()
     message['From'] = 'boxmailer@illinois.edu'
     message['To'] = user['login']
     message['Subject'] = 'Test files'
-    message.set_content(f"Your link to the test item is {user['link']}.")
+
+    message.set_content(email_template.substitute(link=user['link']))
     connection.send_message(message)
 
 @click.command()
