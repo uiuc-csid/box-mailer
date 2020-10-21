@@ -6,6 +6,8 @@ from smtplib import SMTP
 from email.message import EmailMessage
 
 from boxsdk import Client, OAuth2, DevelopmentClient, BoxAPIException
+from boxsdk.object.folder import Folder
+from boxsdk.object.file import File
 import click
 
 email_template = Template("""Your link to the test item is ${link}.
@@ -42,29 +44,30 @@ def main(dev_token, user_details_file, dirs, send_email, base_folder):
 
     # Read in list of users
     reader = csv.DictReader(user_details_file)
-    users_detail = list(reader)
+    users_dict = { user.file : user for user in reader }
 
     # Get reference to base folder
     folder = client.search().query(base_folder, limit=1, result_type='folder').next()
-    for user in users_detail:
-        filetype = 'folder' if dirs else 'file'
-        # Get reference to user's file/folder
-        item = client.search().query(user['file'], limit=1, ancestor_folders=[folder], result_type=filetype).next()
-        try:
-            # Share item with user
-            item.collaborate_with_login(user['login'], role='viewer')
-            user['link'] = item.get_shared_link('collaborators')
-        except BoxAPIException as ex:
-            # Error if already sharing
-            if not ex.code == 'user_already_collaborator':
-                raise ex
+
+    item_type = Folder if dirs else File
+    for item in folder.get_items():
+        if isinstance(item, item_type) and item.name in users_dict:
+            try:
+                # Share item with user
+                user = users_dict[item.name]
+                item.collaborate_with_login(user['login'], role='viewer')
+                user['link'] = item.get_shared_link('collaborators')
+            except BoxAPIException as ex:
+                # Error if already sharing
+                if not ex.code == 'user_already_collaborator':
+                    raise ex
     
     if send_email:
         # Send email to each new student
         connection = SMTP('outbound-relays.techservices.illinois.edu')
         messages = 0
 
-        for user in users_detail:
+        for user, details in users_dict.items():
             # Don't send email if already sharing
             if 'link' not in user:
                 continue
