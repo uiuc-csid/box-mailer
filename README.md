@@ -71,7 +71,7 @@ netid2@illinois.edu,cs100-sp20-netid2-feedback2.docx
 ## Running
 
 ```bash
-git clone https://gitlab.engr.illinois.edu/cs-instructional-dev/box-mailer.git box-mailer
+git clone https://github.com/uiuc-csid/box-mailer.git box-mailer
 cd box-mailer
 pipenv install
 pipenv run python main.py <name of base folder> # 'cs100-sp20' in the example above
