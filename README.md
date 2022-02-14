@@ -84,6 +84,7 @@ The script uses [click](https://click.palletsprojects.com/en/7.x/) for parsing a
 In order to run the app you must create a [developer token](https://developer.box.com/guides/authentication/access-tokens/developer-tokens/) using the [**DEVELOPER CONSOLE**](https://uofi.app.box.com/developers/console) (If you used rclone you can use the oauth2 credentials created for that instead). This token is refreshed hourly and is scoped to your user rather than having an app-service user. You will need to create a dummy app (`boxmailer-<netid>`) with any type of authentication, and it will take you to the configuration page where you can copy your token.
 
 The token can be passed to the application as either:
+
 * as a command line option (`--dev-token`),
 * as an environment variable (`BOXMAILER_DEV_TOKEN`),
 * or via interactive prompt if not otherwise provided.

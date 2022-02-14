@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "box-mailer"
+version = "0.1.0"
+description = ""
+authors = ["Josh Asplund <asplund3@illinois.edu>"]
+
+[tool.poetry.scripts]
+boxmailer = 'box_mailer.main:main'
+
+[tool.poetry.dependencies]
+python = "^3.7"
+boxsdk = "^3.0.1"
+click = "~=7.0"
+
+[tool.poetry.dev-dependencies]
+pylint = "*"
+ipython = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
