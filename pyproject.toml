@@ -5,7 +5,7 @@ description = ""
 authors = ["Josh Asplund <asplund3@illinois.edu>"]
 
 [tool.poetry.scripts]
-boxmailer = 'box_mailer.main:main'
+box-mailer = 'box_mailer.main:main'
 
 [tool.poetry.dependencies]
 python = "^3.7"

@@ -2,6 +2,43 @@
 
 This is a simple script for securely sharing directories or files with students using [Box](https://uofi.app.box.com/). It is FERPA compliant and therefore acceptable for sending grades to students.
 
+## Installation
+
+The repo can be installed directly as a python package. We recommend installing it either using [pipx](https://github.com/pypa/pipx)(recommended) or using a bare [virtualenv](https://docs.python.org/3/library/venv.html) to avoid polluting your python installation.
+
+### pipx Installation
+
+Pipx is a useful tool that allows you to install command line tools into isolated virtual environments while automatically creating and managing them. It also places scripts onto the user's path so that they do not have to activate the venv by hand each time they want to use the command. Because of this, it is the recommended method for installing small scripts like this.
+
+After installing pipx following the [instructions here](https://github.com/pypa/pipx#install-pipx) you can install the package in an isolated virtual environment with a single command
+
+```bash
+pipx install git+https://github.com/uiuc-csid/box-mailer.git
+box-mailer <options>
+```
+
+### Pip Installation
+
+Find a suitable place on your machine and create a virtual environment using `python -m venv $VENV-LOCATION`.
+
+Then activate the virtual environment and install the package. Note: you will need to activate the virtual environment before each time you use the script in order to put it on your path.
+
+```bash
+source $VENV-LOCATION/bin/activate
+pip install git+https://github.com/uiuc-csid/box-mailer.git
+box-mailer <options>
+```
+
+### Required: Box developer token
+
+In order to run the app you must create a [developer token](https://developer.box.com/guides/authentication/access-tokens/developer-tokens/) using the [**DEVELOPER CONSOLE**](https://uofi.app.box.com/developers/console) (If you used rclone you can use the oauth2 credentials created for that instead). This token is refreshed hourly and is scoped to your user rather than having an app-service user. You will need to create a dummy app (`boxmailer-<netid>`) with any type of authentication, and it will take you to the configuration page where you can copy your token.
+
+The token can be passed to the application as either:
+
+* as a command line option (`--dev-token`),
+* as an environment variable (`BOXMAILER_DEV_TOKEN`),
+* or via interactive prompt if not otherwise provided.
+
 ## Preparation
 
 The script has two requirements to run:
@@ -67,27 +104,6 @@ netid2@illinois.edu,cs100-sp20-netid2-feedback1.pdf
 netid2@illinois.edu,cs100-sp20-netid2-feedback2.docx
 ...
 ```
-
-## Running
-
-```bash
-git clone https://github.com/uiuc-csid/box-mailer.git box-mailer
-cd box-mailer
-pipenv install
-pipenv run python main.py <name of base folder> # 'cs100-sp20' in the example above
-```
-
-The script uses [click](https://click.palletsprojects.com/en/7.x/) for parsing and helpdocs, and the [box-sdk](https://github.com/box/box-python-sdk) to connect to the API. These can be installed manually or through [pipenv](https://pipenv.pypa.io/en/latest/) which will automatically create a virtualenv for the script and install all the requirements. The virtualenv can be accessed with `pipenv run <command>` which runs a command within it, or with `pipenv shell`, which spawns a new shell with the virtualenv actived.
-
-### Required: Box developer token
-
-In order to run the app you must create a [developer token](https://developer.box.com/guides/authentication/access-tokens/developer-tokens/) using the [**DEVELOPER CONSOLE**](https://uofi.app.box.com/developers/console) (If you used rclone you can use the oauth2 credentials created for that instead). This token is refreshed hourly and is scoped to your user rather than having an app-service user. You will need to create a dummy app (`boxmailer-<netid>`) with any type of authentication, and it will take you to the configuration page where you can copy your token.
-
-The token can be passed to the application as either:
-
-* as a command line option (`--dev-token`),
-* as an environment variable (`BOXMAILER_DEV_TOKEN`),
-* or via interactive prompt if not otherwise provided.
 
 ### Optional: Email notifications
 
