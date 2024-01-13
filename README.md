@@ -21,10 +21,11 @@ box-mailer <options>
 
 Find a suitable place on your machine and create a virtual environment using `python -m venv $VENV-LOCATION`.
 
-Then activate the virtual environment and install the package. Note: you will need to activate the virtual environment before each time you use the script in order to put it on your path.
+Then activate the virtual environment and install the package. Note: You will need to activate the virtual environment before each time you use the script in order to put it on your path. If pip is out of date, the library installation may fail.
 
 ```bash
 source $VENV-LOCATION/bin/activate
+pip install -U pip
 pip install git+https://github.com/uiuc-csid/box-mailer.git
 box-mailer <options>
 ```
