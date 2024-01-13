@@ -78,6 +78,7 @@ def main(dev_token, user_details_file, dirs, send_email, base_folder):
                 if not ex.code == 'user_already_collaborator':
                     raise ex
                 user['already_collaborator'] = True
+            # TODO: This line could still throw in unsupervised scenarios.
             user['link'] = item.get_shared_link(access='collaborators')
             processed_items.add(item.name)
         else:
