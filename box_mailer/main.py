@@ -111,6 +111,7 @@ def main(dev_token, user_details_file, dirs, send_email, base_folder):
             if messages >= 95:
                 connection.quit()
                 connection = SMTP('outbound-relays.techservices.illinois.edu')
+                messages = 0
 
             send_email_fun(details, connection)
             messages += 1
