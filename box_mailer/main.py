@@ -39,19 +39,26 @@ def send_email_fun(details, connection):
 
 @click.command()
 @click.option('--dev-token', envvar='BOXMAILER_DEV_TOKEN', help='Box development token. See README for details')
+@click.option('--access-token', envvar='BOXMAILER_ACCESS_TOKEN', help='Box access token. Mutually exclusive with --dev-token.')
 @click.option('--user-details-file', type=click.File(), default="input.csv", help='Defaults to input.csv')
 @click.option('--dirs/--files', default=True, help='Share folders or files. Defaults to folders')
 @click.option('--send-email', type=click.BOOL, default=False, help='Send confirmation emails to students')
+@click.option('-v', '--verbose', count=True, help='Verbose output')
 @click.argument('base-folder')
-def main(dev_token, user_details_file, dirs, send_email, base_folder):
+def main(dev_token, access_token, user_details_file, dirs, send_email, verbose, base_folder):
+    if access_token and dev_token:
+        raise Exception('Error: access token and dev token are mutually exclusive.')
+    if access_token is None:
+        access_token = dev_token
+
     # Get API client
-    if dev_token is None:
+    if access_token is None:
         client = DevelopmentClient()
     else:
         auth = OAuth2(
             client_id='',
             client_secret='',
-            access_token=dev_token,
+            access_token=access_token,
         )
         client = Client(auth)
 
@@ -78,8 +85,12 @@ def main(dev_token, user_details_file, dirs, send_email, base_folder):
                 if not ex.code == 'user_already_collaborator':
                     raise ex
                 user['already_collaborator'] = True
-            # TODO: This line could still throw in unsupervised scenarios.
-            user['link'] = item.get_shared_link(access='collaborators')
+            try:
+                user['link'] = item.get_shared_link(access='collaborators')
+            except BoxAPIException as ex:
+                # TODO: handle this better for automation and logging
+                print('Error: Could not get shared link for item:', item.name)
+                raise ex
             processed_items.add(item.name)
         else:
             print('Warning: Item on Box but not listed in input: ' + item.name)
@@ -92,7 +103,7 @@ def main(dev_token, user_details_file, dirs, send_email, base_folder):
                 'Associated details:',
                 str(details)
             )
-    
+
     if send_email:
         # Send email to each new student
         connection = SMTP('outbound-relays.techservices.illinois.edu')
@@ -101,10 +112,12 @@ def main(dev_token, user_details_file, dirs, send_email, base_folder):
         for item_name, details in users_dict.items():
             # Don't send email if processing failed or already sharing
             if item_name not in processed_items:
-                #print('Item could not be processed, so will not email for:', item_name)
+                if verbose:
+                    print('Item could not be processed, so will not email for:', item_name)
                 continue
             if 'already_collaborator' not in details or details['already_collaborator']:
-                #print('Already collaborator, so will not email for:', item_name)
+                if verbose:
+                    print('Already collaborator, so will not email for:', item_name)
                 continue
 
             # Reconnect if we are nearing rate limiting
