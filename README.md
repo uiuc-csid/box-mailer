@@ -4,7 +4,9 @@ This is a simple script for securely sharing directories or files with students 
 
 ## Installation
 
-The repo can be installed directly as a python package. We recommend installing it either using [pipx](https://github.com/pypa/pipx)(recommended) or using a bare [virtualenv](https://docs.python.org/3/library/venv.html) to avoid polluting your python installation.
+The repo can be installed directly as a python package. We strongly recommend installing it using [pipx](https://github.com/pypa/pipx)(recommended) to simplify installation and avoid polluting your python installation.
+
+We also provide other methods of installation using a bare [virtualenv](https://docs.python.org/3/library/venv.html) or global install.
 
 ### pipx Installation
 
@@ -17,14 +19,24 @@ pipx install git+https://github.com/uiuc-csid/box-mailer.git
 box-mailer <options>
 ```
 
-### Pip Installation
+### Manual Pip Installation in virtualenv
 
-Find a suitable place on your machine and create a virtual environment using `python -m venv $VENV-LOCATION`.
+Find a suitable place on your machine and create a virtual environment using `python -m venv $VENV_LOCATION`.
 
 Then activate the virtual environment and install the package. Note: You will need to activate the virtual environment before each time you use the script in order to put it on your path. If pip is out of date, the library installation may fail.
 
 ```bash
-source $VENV-LOCATION/bin/activate
+source $VENV_LOCATION/bin/activate
+pip install -U pip
+pip install git+https://github.com/uiuc-csid/box-mailer.git
+box-mailer <options>
+```
+
+### Global Pip Installation
+
+You can also install the script globally. This isn't recommended, however, as it can cause conflicts between library versions and be hard to remove.
+
+```bash
 pip install -U pip
 pip install git+https://github.com/uiuc-csid/box-mailer.git
 box-mailer <options>
