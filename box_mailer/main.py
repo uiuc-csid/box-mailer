@@ -155,28 +155,29 @@ def main(
         print(f"Got folder: {folder.name}")
 
     item_type = Folder if dirs else File
-    for item in folder.get_items():
-        if isinstance(item, item_type) and item.name in users_dict:
-            try:
-                # Share item with user
-                user = users_dict[item.name]
-                user["link"] = "(not defined)"
-                user["already_collaborator"] = False
-                item.collaborate_with_login(user["login"], role="viewer")
-            except BoxAPIException as ex:
-                # Error if already sharing
-                if not ex.code == "user_already_collaborator":
+    with click.progressbar(folder.get_items(), label="Sharing on box") as bar:
+        for item in bar:
+            if isinstance(item, item_type) and item.name in users_dict:
+                try:
+                    # Share item with user
+                    user = users_dict[item.name]
+                    user["link"] = "(not defined)"
+                    user["already_collaborator"] = False
+                    item.collaborate_with_login(user["login"], role="viewer")
+                except BoxAPIException as ex:
+                    # Error if already sharing
+                    if not ex.code == "user_already_collaborator":
+                        raise ex
+                    user["already_collaborator"] = True
+                try:
+                    user["link"] = item.get_shared_link(access="collaborators")
+                except BoxAPIException as ex:
+                    # TODO: handle this better for automation and logging
+                    print(f"Error: Could not get shared link for item: ${item.name}")
                     raise ex
-                user["already_collaborator"] = True
-            try:
-                user["link"] = item.get_shared_link(access="collaborators")
-            except BoxAPIException as ex:
-                # TODO: handle this better for automation and logging
-                print(f"Error: Could not get shared link for item: ${item.name}")
-                raise ex
-            processed_items.add(item.name)
-        else:
-            print(f"Warning: Item on Box but not listed in input: ${item.name}")
+                processed_items.add(item.name)
+            else:
+                print(f"Warning: Item on Box but not listed in input: ${item.name}")
 
     for item_name, details in users_dict.items():
         if item_name not in processed_items:
