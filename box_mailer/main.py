@@ -30,7 +30,7 @@ https://cloud-dashboard.illinois.edu"""
 # This function cannot be named "send_email" or it will conflict with
 # the similarly-named argument for main. (The argument for main is
 # auto-named by the click library based on the matching option.)
-def send_email_fun(details, connection):
+def send_email_message(details, connection):
     message = EmailMessage()
     message["From"] = "no-reply@illinois.edu"
     message["To"] = details["login"]
@@ -186,30 +186,22 @@ def main(
 
     if send_email:
         # Send email to each new student
-        connection = SMTP("outbound-relays.techservices.illinois.edu")
-        messages = 0
+        with BatchedSMTP("outbound-relays.techservices.illinois.edu") as connection:
 
-        for item_name, details in users_dict.items():
-            # Don't send email if processing failed or already sharing
-            if item_name not in processed_items:
-                if verbose:
-                    print(
-                        f"Item could not be processed, so will not email for: ${item_name}"
-                    )
-                continue
-            if "already_collaborator" not in details or details["already_collaborator"]:
-                if verbose:
-                    print(f"Already collaborator, so will not email for: ${item_name}")
-                continue
+            for item_name, details in users_dict.items():
+                # Don't send email if processing failed or already sharing
+                if item_name not in processed_items:
+                    if verbose:
+                        print(
+                            f"Item could not be processed, so will not email for: ${item_name}"
+                        )
+                    continue
+                if "already_collaborator" not in details or details["already_collaborator"]:
+                    if verbose:
+                        print(f"Already collaborator, so will not email for: ${item_name}")
+                    continue
 
-            # Reconnect if we are nearing rate limiting
-            if messages >= 95:
-                connection.quit()
-                connection = SMTP("outbound-relays.techservices.illinois.edu")
-                messages = 0
-
-            send_email_fun(details, connection)
-            messages += 1
+                send_email_message(details, connection)
 
     return
 
