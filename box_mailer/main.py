@@ -43,9 +43,10 @@ def send_email_fun(details, connection):
 @click.option('--user-details-file', type=click.File(), default="input.csv", help='Defaults to input.csv')
 @click.option('--dirs/--files', default=True, help='Share folders or files. Defaults to folders')
 @click.option('--send-email', type=click.BOOL, default=False, help='Send confirmation emails to students')
+@click.option('--folder-id-mode', envvar='BOXMAILER_FOLDER_ID_MODE', is_flag=True, default=False, help='Specify an ID for base_folder instead of a remote path')
 @click.option('-v', '--verbose', count=True, help='Verbose output')
 @click.argument('base-folder')
-def main(dev_token, access_token, user_details_file, dirs, send_email, verbose, base_folder):
+def main(dev_token, access_token, user_details_file, dirs, send_email, folder_id_mode, verbose, base_folder):
     if access_token and dev_token:
         raise Exception('Error: access token and dev token are mutually exclusive.')
     if access_token is None:
@@ -69,7 +70,13 @@ def main(dev_token, access_token, user_details_file, dirs, send_email, verbose, 
     processed_items = set()
 
     # Get reference to base folder
-    folder = client.search().query(base_folder, limit=1, result_type='folder').next()
+    if folder_id_mode:
+        folder = client.folder(folder_id=base_folder).get()
+    else:
+        folder = client.search().query(base_folder, limit=1, result_type='folder').next()
+
+    if verbose:
+        print(f"Got folder: {folder.name}")
 
     item_type = Folder if dirs else File
     for item in folder.get_items():
